@@ -25,6 +25,18 @@
         align-items: center;
         padding: 10px;
     }
+
+    .red {
+        background-color: red;
+    }
+
+    .green {
+        background-color: green;
+    }
+
+    .white {
+        background-color: white;
+    }
 </style>
 <head>
     <meta charset="UTF-8">
@@ -48,11 +60,19 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="module-title-area mb-2">
-                <span class="module-title-large">BIST Endeksleri</span>
-                <a href="#" class="button arrow-right thin">Tümü</a>
+                <span class="module-title-large">Borsa Verileri</span>
+                <a href="#" class="button arrow-right thin"></a>
             </div>
             <div class="datatable-container none-datatable">
                 <table class="datatable display responsive lazyload">
+                    <thead>
+                        <tr>
+                            <th>MENKUL</th>
+                            <th>FİYAT</th>
+                            <th>ORAN</th>
+                            <th>ZAMAN</th>
+                        </tr>
+                    </thead>
                     <tbody id="dataContainer">
                     </tbody>
                 </table>
@@ -60,17 +80,7 @@
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Fiyat</th>
-                <th>Oran</th>
-                <th>Zaman</th>
-                <th>Saat</th>
-            </tr>
-        </thead>
-        <tbody id="dataContainer"></tbody>
-    </table>
+
 
 
     <link rel="stylesheet" href="~/c/c/swiper-bundle.css">
@@ -96,41 +106,61 @@
     borsaHubProxy.on('updateBorsaVerileri', function (borsaVerileri) {
         var dataContainer = $("#dataContainer");
         var yeniVeriler = [];
+        // değişen row'un background rengini ayarlamak için fonksiyon
+        function setBackground(row, current, previous) {
+            if (current > previous) {
+                row.classList.add('green');
+            } else if (current < previous) {
+                row.classList.add('red');
+            }
+            setTimeout(function () {
+                if (row.classList.contains('green')) {
+                    row.classList.remove('green');
+                    row.classList.add("white");
+                }
+                if (row.classList.contains('red')) {
+                    row.classList.remove('red');
+                    row.classList.add("white")
+                }
+
+            }, 3000);
+        }
+
+        // updateBorsaVerileri event listener'ında, eskiVeriler dizisindeki tüm satırların class'ını white yap
+      
+
 
 
         for (var i = 1; i < borsaVerileri.length - 1; i++) {
             var datarr = borsaVerileri[i].split("|");
             yeniVeriler.push(datarr);
 
-
             var eskiVeriIndex = eskiVeriler.findIndex(function (item) {
                 return item[0] === datarr[0];
             });
 
-
             if (eskiVeriIndex === -1) {
                 var asd = $("<tr id='id_" + datarr[0] + "'>");
                 for (var j = 0; j < 4; j++) {
-                    if (datarr[j] != "") {
+                    if (datarr[j] !== "") {
                         var tdElement = $("<td></td>");
+
                         var pElement = $("<p>" + datarr[j] + "</p>");
                         tdElement.append(pElement);
+
                         asd.append(tdElement);
                         dataContainer.append(asd);
                     }
                 }
                 dataContainer.append("</tr>");
-            }
-            else if (!eskiVeriler[eskiVeriIndex].every(function (item, index) {
+            } else if (!eskiVeriler[eskiVeriIndex].every(function (item, index) {
                 return item === datarr[index];
             })) {
                 var row = document.getElementById("id_" + datarr[0]);
-                setTimeout(() => { row.style.backgroundColor = "white" }, 1000)
                 row.innerHTML = "";
-                console.log(row);
 
                 for (var j = 0; j < 4; j++) {
-                    if (datarr[j] != "") {
+                    if (datarr[j] !== "") {
                         var tag = document.createElement("td");
                         var ptag = document.createElement("p");
                         var text = document.createTextNode(datarr[j]);
@@ -139,34 +169,18 @@
                         row.appendChild(tag);
 
                         if (j === 1) {
-                            var ÖncekiFiyat = parseFloat(eskiVeriler[eskiVeriIndex][j]);
-                            var ŞuankiFiyat = parseFloat(datarr[j]);
-                            if (ŞuankiFiyat > ÖncekiFiyat) {
-                                row.style.backgroundColor = "green";
-
-                              setTimeout(function background() {
-                                  row.style.backgroundColor = "#000";
-                                }, 1000);
-                            }
-                            else if (ŞuankiFiyat < ÖncekiFiyat) {
-                                row.style.backgroundColor = "red";
-                                setTimeout(function background() {
-                                  row.style.backgroundColor = "#000";
-                                }, 1000);
-                            }
+                            var öncekiFiyat = parseFloat(eskiVeriler[eskiVeriIndex][j]);
+                            var şuankiFiyat = parseFloat(datarr[j]);
+                            setBackground(row, şuankiFiyat, öncekiFiyat);
                         }
                     }
                 }
-
             }
         }
-
         eskiVeriler = yeniVeriler;
-
     });
 
     connection.start({ transport: ['webSockets', 'longPolling'] }).done(function () {
-
         borsaHubProxy.invoke('getBorsaVerileri');
     });
 </script>

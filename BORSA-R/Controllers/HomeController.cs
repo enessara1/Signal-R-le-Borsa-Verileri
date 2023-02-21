@@ -37,25 +37,22 @@ namespace SİGNAL_R.Controllers
     [HubName("borsaHub")]
     public class BorsaHub : Hub
     {
-        // API'den borsa verilerini alacak olan fonksiyonumuz.
+   
         public async Task GetBorsaVerileri()
         {
             while (true)
             {
-                // Verileri API'den alıyoruz.
+              
                 var borsaVerileri = await ApiHelper.GetBorsaVerileri();
 
-                // Alınan verileri istemci tarafına gönderiyoruz.
                 Clients.All.updateBorsaVerileri(borsaVerileri.Split('~'));
 
-                // Veri güncellemelerinin arasında bekleme süresi.
-                //await Task.Delay(5000);
+      
             }
         }
         
     }
 
-    // API'ye istek atmak için yardımcı bir sınıf oluşturuyoruz.
     public static class ApiHelper
     {
         public static async Task<string> GetBorsaVerileri()
