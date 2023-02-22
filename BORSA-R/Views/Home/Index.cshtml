@@ -57,20 +57,20 @@
 </head>
 <body>
 
-    <div class="row mb-4">
+    <div class="row mb-4" style="width:70%">
         <div class="col-12">
             <div class="module-title-area mb-2">
-                <span class="module-title-large">Borsa Verileri</span>
-                <a href="#" class="button arrow-right thin"></a>
+                <span class="module-title-large">BIST Endeksleri</span>
+                
             </div>
             <div class="datatable-container none-datatable">
                 <table class="datatable display responsive lazyload">
                     <thead>
                         <tr>
-                            <th>MENKUL</th>
-                            <th>FİYAT</th>
-                            <th>ORAN</th>
-                            <th>ZAMAN</th>
+                            <th>Fiyat</th>
+                            <th>Oran</th>
+                            <th>Zaman</th>
+                            <th>Saat</th>
                         </tr>
                     </thead>
                     <tbody id="dataContainer">
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-
+    
 
 
     <link rel="stylesheet" href="~/c/c/swiper-bundle.css">
@@ -99,18 +99,21 @@
 </body>
 
 
+
 <script>
     var connection = $.hubConnection();
     var borsaHubProxy = connection.createHubProxy('borsaHub');
     var eskiVeriler = [];
+
     borsaHubProxy.on('updateBorsaVerileri', function (borsaVerileri) {
         var dataContainer = $("#dataContainer");
         var yeniVeriler = [];
-        // değişen row'un background rengini ayarlamak için fonksiyon
-        function setBackground(row, current, previous) {
-            if (current > previous) {
+
+       
+        function setBackground(row, şuankiFiyat, öncekiFiyat) {
+            if (şuankiFiyat > öncekiFiyat) {
                 row.classList.add('green');
-            } else if (current < previous) {
+            } else if (şuankiFiyat < öncekiFiyat) {
                 row.classList.add('red');
             }
             setTimeout(function () {
@@ -122,13 +125,8 @@
                     row.classList.remove('red');
                     row.classList.add("white")
                 }
-
             }, 3000);
         }
-
-        // updateBorsaVerileri event listener'ında, eskiVeriler dizisindeki tüm satırların class'ını white yap
-      
-
 
 
         for (var i = 1; i < borsaVerileri.length - 1; i++) {
@@ -140,16 +138,15 @@
             });
 
             if (eskiVeriIndex === -1) {
-                var asd = $("<tr id='id_" + datarr[0] + "'>");
+                var TRElement = $("<tr id='id_" + datarr[0] + "'>");
                 for (var j = 0; j < 4; j++) {
                     if (datarr[j] !== "") {
-                        var tdElement = $("<td></td>");
+                        var TDElement = $("<td></td>");
+                        var PElement = $("<p>" + datarr[j] + "</p>");
+                        TDElement.append(PElement);
 
-                        var pElement = $("<p>" + datarr[j] + "</p>");
-                        tdElement.append(pElement);
-
-                        asd.append(tdElement);
-                        dataContainer.append(asd);
+                        TRElement.append(TDElement);
+                        dataContainer.append(TRElement);
                     }
                 }
                 dataContainer.append("</tr>");
@@ -161,12 +158,12 @@
 
                 for (var j = 0; j < 4; j++) {
                     if (datarr[j] !== "") {
-                        var tag = document.createElement("td");
+                        var tdTag = document.createElement("td");
                         var ptag = document.createElement("p");
                         var text = document.createTextNode(datarr[j]);
                         ptag.appendChild(text);
-                        tag.appendChild(ptag);
-                        row.appendChild(tag);
+                        tdTag.appendChild(ptag);
+                        row.appendChild(tdTag);
 
                         if (j === 1) {
                             var öncekiFiyat = parseFloat(eskiVeriler[eskiVeriIndex][j]);
@@ -180,12 +177,8 @@
         eskiVeriler = yeniVeriler;
     });
 
-    connection.start({ transport: ['webSockets', 'longPolling'] }).done(function () {
+    connection.start().then(function () {
         borsaHubProxy.invoke('getBorsaVerileri');
     });
 </script>
-
-
-
-
 
